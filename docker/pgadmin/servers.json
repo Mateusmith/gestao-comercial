@@ -1,8 +1,8 @@
 {
   "Servers": {
     "1": {
-      "Name": "CommerceCore PostgreSQL",
-      "Group": "CommerceCore",
+      "Name": "Gestão Comercial PostgreSQL",
+      "Group": "Gestão Comercial",
       "Host": "postgres",
       "Port": 5432,
       "MaintenanceDB": "commercecore",

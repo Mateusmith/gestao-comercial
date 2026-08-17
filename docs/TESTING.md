@@ -68,8 +68,8 @@ Com a stack em execução, rode a collection na rede interna do Compose:
 ```powershell
 docker run --rm --network commercecore_default `
   -v "${PWD}/postman:/etc/newman" postman/newman:alpine `
-  run /etc/newman/CommerceCore.postman_collection.json `
-  -e /etc/newman/Local.postman_environment.json `
+  run /etc/newman/GestaoComercial.postman_collection.json `
+  -e /etc/newman/GestaoComercial.postman_environment.json `
   --env-var base_url=http://api:8082 `
   --env-var keycloak_url=http://keycloak:8080
 ```

@@ -1,17 +1,19 @@
-# CommerceCore
+# Gestão Comercial
 
-[![CI](https://github.com/Mateusmith/commercecore/actions/workflows/ci.yml/badge.svg)](https://github.com/Mateusmith/commercecore/actions/workflows/ci.yml)
+[![CI](https://github.com/Mateusmith/gestao-comercial/actions/workflows/ci.yml/badge.svg)](https://github.com/Mateusmith/gestao-comercial/actions/workflows/ci.yml)
 [![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot 4](https://img.shields.io/badge/Spring_Boot-4.0.7-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ERP comercial multiempresa construído como monólito modular. O projeto integra catálogo, precificação, vendas, compras, estoque e financeiro em fluxos transacionais completos, com segurança por JWT, idempotência, auditoria e observabilidade.
 
-O CommerceCore não é apenas um CRUD: ele preserva invariantes entre módulos. Uma venda reserva e baixa estoque, gera parcelas exatas a receber e registra auditoria. Um recebimento parcial de compra atualiza o saldo físico, mantém o pedido aberto e cria contas a pagar sem duplicidade.
+A Gestão Comercial não é apenas um CRUD: ela preserva invariantes entre módulos. Uma venda reserva e baixa estoque, gera parcelas exatas a receber e registra auditoria. Um recebimento parcial de compra atualiza o saldo físico, mantém o pedido aberto e cria contas a pagar sem duplicidade.
+
+O nome público do produto é **Gestão Comercial**. Os prefixos técnicos `COMMERCECORE_*`, o pacote `br.com.commercecore`, o realm e o banco `commercecore` foram preservados para manter compatibilidade com ambientes existentes.
 
 ## Problema resolvido
 
-Operações comerciais costumam ficar espalhadas entre planilhas e sistemas sem consistência. O CommerceCore centraliza o ciclo operacional e mantém rastreabilidade entre o documento de origem, os movimentos de estoque e os lançamentos financeiros.
+Operações comerciais costumam ficar espalhadas entre planilhas e sistemas sem consistência. A Gestão Comercial centraliza o ciclo operacional e mantém rastreabilidade entre o documento de origem, os movimentos de estoque e os lançamentos financeiros.
 
 Principais capacidades:
 
@@ -79,8 +81,8 @@ Detalhes, dependências e invariantes estão em [ARCHITECTURE.md](ARCHITECTURE.m
 Pré-requisito: Docker Desktop em execução.
 
 ```powershell
-git clone https://github.com/Mateusmith/commercecore.git
-cd commercecore
+git clone https://github.com/Mateusmith/gestao-comercial.git
+cd gestao-comercial
 docker compose up -d --build
 docker compose ps
 ```
@@ -130,9 +132,9 @@ As credenciais são exclusivamente locais e nunca devem ser usadas em produção
 
 A forma mais rápida é importar no Postman:
 
-1. [CommerceCore.postman_collection.json](postman/CommerceCore.postman_collection.json)
-2. [Local.postman_environment.json](postman/Local.postman_environment.json)
-3. Selecione o ambiente `CommerceCore - Local`.
+1. [GestaoComercial.postman_collection.json](postman/GestaoComercial.postman_collection.json)
+2. [GestaoComercial.postman_environment.json](postman/GestaoComercial.postman_environment.json)
+3. Selecione o ambiente `Gestão Comercial - Local`.
 4. Execute a coleção completa. O primeiro request obtém e armazena o JWT.
 
 Todos os corpos JSON, a ordem dos fluxos e exemplos de erro estão em [docs/API_EXAMPLES.md](docs/API_EXAMPLES.md).
@@ -142,8 +144,8 @@ Para executar os mesmos 28 contratos automaticamente com Newman:
 ```powershell
 docker run --rm --network commercecore_default `
   -v "${PWD}/postman:/etc/newman" postman/newman:alpine `
-  run /etc/newman/CommerceCore.postman_collection.json `
-  -e /etc/newman/Local.postman_environment.json `
+  run /etc/newman/GestaoComercial.postman_collection.json `
+  -e /etc/newman/GestaoComercial.postman_environment.json `
   --env-var base_url=http://api:8082 `
   --env-var keycloak_url=http://keycloak:8080
 ```

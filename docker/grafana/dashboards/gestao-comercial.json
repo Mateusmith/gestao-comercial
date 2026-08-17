@@ -49,7 +49,7 @@
     }
   ],
   "schemaVersion": 41,
-  "tags": ["commercecore", "spring-boot"],
+  "tags": ["gestao-comercial", "spring-boot"],
   "templating": {
     "list": [{
       "name": "DS_PROMETHEUS",
@@ -59,7 +59,7 @@
     }]
   },
   "time": { "from": "now-1h", "to": "now" },
-  "title": "CommerceCore - Visao operacional",
-  "uid": "commercecore-operacional",
+  "title": "Gestão Comercial - Visão operacional",
+  "uid": "gestao-comercial-operacional",
   "version": 1
 }

@@ -10,7 +10,7 @@ public class ApiRootController {
     @GetMapping("/")
     Map<String, Object> raiz() {
         return Map.of(
-                "aplicacao", "CommerceCore",
+                "aplicacao", "Gestão Comercial",
                 "versao", "1.0.0",
                 "documentacao", "/swagger-ui.html",
                 "saude", "/actuator/health");

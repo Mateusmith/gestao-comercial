@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests package
 FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S commercecore && adduser -S commercecore -G commercecore
 WORKDIR /app
-COPY --from=construcao /workspace/target/commercecore-*.jar app.jar
+COPY --from=construcao /workspace/target/gestao-comercial-*.jar app.jar
 USER commercecore
 EXPOSE 8082
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-Djava.security.egd=file:/dev/urandom", "-jar", "/app/app.jar"]

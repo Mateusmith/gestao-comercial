@@ -122,7 +122,7 @@ function Esperar-Titulos {
     throw "Os $QuantidadeEsperada titulos do tipo $Tipo nao foram publicados no prazo esperado."
 }
 
-Write-Host "`nCommerceCore - validacao ponta a ponta" -ForegroundColor Cyan
+Write-Host "`nGestao Comercial - validacao ponta a ponta" -ForegroundColor Cyan
 
 $saude = Invoke-RestMethod "$UrlApi/actuator/health"
 Confirmar ($saude.status -eq "UP") "API esta saudavel"

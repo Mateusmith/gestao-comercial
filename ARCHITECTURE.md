@@ -1,8 +1,8 @@
-# Arquitetura do CommerceCore
+# Arquitetura da Gestão Comercial
 
 ## Visão geral
 
-O CommerceCore é um monólito modular orientado a capacidades de negócio. A aplicação é implantada como uma unidade, mas os módulos possuem contratos, dados e dependências explícitos. Essa escolha preserva transações locais e simplicidade operacional sem transformar o código em um monólito sem limites.
+A Gestão Comercial é um monólito modular orientado a capacidades de negócio. A aplicação é implantada como uma unidade, mas os módulos possuem contratos, dados e dependências explícitos. Essa escolha preserva transações locais e simplicidade operacional sem transformar o código em um monólito sem limites.
 
 ## Contextos
 

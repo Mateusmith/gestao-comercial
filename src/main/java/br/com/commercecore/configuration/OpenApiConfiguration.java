@@ -21,7 +21,7 @@ public class OpenApiConfiguration {
 
         return new OpenAPI()
                 .info(new Info()
-                        .title("CommerceCore API")
+                        .title("Gestão Comercial API")
                         .version("1.0.0")
                         .description("ERP comercial modular: vendas, compras, estoque, precificacao e financeiro.")
                         .contact(new Contact().name("Mateus Smith")))

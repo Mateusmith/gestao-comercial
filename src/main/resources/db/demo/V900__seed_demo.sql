@@ -1,8 +1,8 @@
 INSERT INTO empresa (
     id, razao_social, nome_fantasia, cnpj, ativa, versao, criado_em, atualizado_em
 ) VALUES (
-    '11111111-1111-1111-1111-111111111111', 'CommerceCore Demonstracao Ltda',
-    'CommerceCore Demo', '11222333000181', true, 0, now(), now()
+    '11111111-1111-1111-1111-111111111111', 'Gestao Comercial Demonstracao Ltda',
+    'Gestao Comercial Demo', '11222333000181', true, 0, now(), now()
 );
 
 INSERT INTO filial (

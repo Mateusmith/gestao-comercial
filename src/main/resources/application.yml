@@ -6,7 +6,7 @@ server:
 
 spring:
   application:
-    name: CommerceCore
+    name: gestao-comercial
   datasource:
     url: ${COMMERCECORE_BANCO_URL:jdbc:postgresql://localhost:54325/commercecore}
     username: ${COMMERCECORE_BANCO_USUARIO:commercecore}

@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "5f1c4b58-820a-463d-b146-2ec8fb709116",
-    "name": "CommerceCore - Fluxo empresarial completo",
-    "description": "Autentica, vende, recebe, compra, paga e valida estoque, relatórios e auditoria. Execute com o ambiente CommerceCore - Local.",
+    "name": "Gestão Comercial - Fluxo empresarial completo",
+    "description": "Autentica, vende, recebe, compra, paga e valida estoque, relatórios e auditoria. Execute com o ambiente Gestão Comercial - Local.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {

@@ -1,6 +1,6 @@
 {
   "realm": "commercecore",
-  "displayName": "CommerceCore",
+  "displayName": "Gestão Comercial",
   "enabled": true,
   "registrationAllowed": false,
   "resetPasswordAllowed": true,
@@ -25,14 +25,14 @@
   "clients": [
     {
       "clientId": "commercecore-api",
-      "name": "CommerceCore API",
+      "name": "Gestão Comercial API",
       "enabled": true,
       "bearerOnly": true,
       "protocol": "openid-connect"
     },
     {
       "clientId": "commercecore-postman",
-      "name": "CommerceCore Postman",
+      "name": "Gestão Comercial Postman",
       "enabled": true,
       "publicClient": true,
       "directAccessGrantsEnabled": true,
@@ -79,7 +79,7 @@
       "username": "admin@commercecore.local",
       "email": "admin@commercecore.local",
       "firstName": "Administrador",
-      "lastName": "CommerceCore",
+      "lastName": "Gestão Comercial",
       "enabled": true,
       "emailVerified": true,
       "credentials": [

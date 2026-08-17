@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: CommerceCore
+  - name: Gestão Comercial
     orgId: 1
-    folder: CommerceCore
+    folder: Gestão Comercial
     type: file
     disableDeletion: true
     updateIntervalSeconds: 30
