@@ -1,0 +1,157 @@
+{
+  "realm": "commercecore",
+  "displayName": "CommerceCore",
+  "enabled": true,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      { "name": "ADMINISTRADOR" },
+      { "name": "GERENTE_COMERCIAL" },
+      { "name": "VENDEDOR" },
+      { "name": "FATURISTA" },
+      { "name": "GERENTE_ESTOQUE" },
+      { "name": "ESTOQUISTA" },
+      { "name": "GERENTE_COMPRAS" },
+      { "name": "COMPRADOR" },
+      { "name": "GERENTE_FINANCEIRO" },
+      { "name": "FINANCEIRO" },
+      { "name": "AUDITOR" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "commercecore-api",
+      "name": "CommerceCore API",
+      "enabled": true,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "commercecore-postman",
+      "name": "CommerceCore Postman",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "https://oauth.pstmn.io/v1/callback",
+        "http://localhost:*"
+      ],
+      "webOrigins": ["*"],
+      "protocolMappers": [
+        {
+          "name": "audiencia-commercecore-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "commercecore-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "filiais-permitidas",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "filiais",
+            "claim.name": "filiais",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@commercecore.local",
+      "email": "admin@commercecore.local",
+      "firstName": "Administrador",
+      "lastName": "CommerceCore",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "CommerceCore@123", "temporary": false }
+      ],
+      "realmRoles": ["ADMINISTRADOR"],
+      "attributes": { "filiais": ["22222222-2222-2222-2222-222222222222"] }
+    },
+    {
+      "username": "vendedor@commercecore.local",
+      "email": "vendedor@commercecore.local",
+      "firstName": "Valeria",
+      "lastName": "Vendas",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "CommerceCore@123", "temporary": false }
+      ],
+      "realmRoles": ["VENDEDOR", "GERENTE_COMERCIAL", "FATURISTA"],
+      "attributes": { "filiais": ["22222222-2222-2222-2222-222222222222"] }
+    },
+    {
+      "username": "comprador@commercecore.local",
+      "email": "comprador@commercecore.local",
+      "firstName": "Carlos",
+      "lastName": "Compras",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "CommerceCore@123", "temporary": false }
+      ],
+      "realmRoles": ["COMPRADOR", "GERENTE_COMPRAS"],
+      "attributes": { "filiais": ["22222222-2222-2222-2222-222222222222"] }
+    },
+    {
+      "username": "estoque@commercecore.local",
+      "email": "estoque@commercecore.local",
+      "firstName": "Estela",
+      "lastName": "Estoque",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "CommerceCore@123", "temporary": false }
+      ],
+      "realmRoles": ["ESTOQUISTA", "GERENTE_ESTOQUE"],
+      "attributes": { "filiais": ["22222222-2222-2222-2222-222222222222"] }
+    },
+    {
+      "username": "financeiro@commercecore.local",
+      "email": "financeiro@commercecore.local",
+      "firstName": "Fernanda",
+      "lastName": "Financeiro",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "CommerceCore@123", "temporary": false }
+      ],
+      "realmRoles": ["FINANCEIRO", "GERENTE_FINANCEIRO"],
+      "attributes": { "filiais": ["22222222-2222-2222-2222-222222222222"] }
+    },
+    {
+      "username": "auditor@commercecore.local",
+      "email": "auditor@commercecore.local",
+      "firstName": "Alice",
+      "lastName": "Auditoria",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "CommerceCore@123", "temporary": false }
+      ],
+      "realmRoles": ["AUDITOR"],
+      "attributes": { "filiais": ["22222222-2222-2222-2222-222222222222"] }
+    }
+  ]
+}

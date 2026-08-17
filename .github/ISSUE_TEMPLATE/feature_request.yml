@@ -1,0 +1,41 @@
+name: Propor melhoria
+description: Sugira uma capacidade com problema e valor de negócio claros.
+title: "feat: "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Problema
+      description: Qual necessidade real ainda não está atendida?
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Resultado desejado
+      description: Descreva comportamento e critérios de aceite, sem prescrever detalhes desnecessários.
+    validations:
+      required: true
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo principal
+      options:
+        - Organização
+        - Parceiros
+        - Catálogo
+        - Precificação
+        - Estoque
+        - Vendas
+        - Compras
+        - Financeiro
+        - Relatórios
+        - Plataforma
+    validations:
+      required: true
+  - type: textarea
+    id: riscos
+    attributes:
+      label: Riscos e impactos
+      description: Consistência, segurança, migração, compatibilidade ou operação.

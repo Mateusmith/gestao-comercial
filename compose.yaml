@@ -1,0 +1,115 @@
+name: commercecore
+
+services:
+  postgres:
+    image: postgres:17.5-alpine
+    environment:
+      POSTGRES_DB: commercecore
+      POSTGRES_USER: commercecore
+      POSTGRES_PASSWORD: commercecore
+    ports:
+      - "54325:5432"
+    volumes:
+      - commercecore-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commercecore -d commercecore"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.3
+    command: start-dev --import-realm --health-enabled=true
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://localhost:18083
+      KC_HTTP_PORT: 8080
+    ports:
+      - "18083:8080"
+    volumes:
+      - ./docker/keycloak/realm-commercecore.json:/opt/keycloak/data/import/realm-commercecore.json:ro
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      SERVER_PORT: 8082
+      COMMERCECORE_BANCO_URL: jdbc:postgresql://postgres:5432/commercecore
+      COMMERCECORE_BANCO_USUARIO: commercecore
+      COMMERCECORE_BANCO_SENHA: commercecore
+      COMMERCECORE_EMISSOR_JWT: http://localhost:18083/realms/commercecore
+      COMMERCECORE_URL_CHAVES_JWK: http://keycloak:8080/realms/commercecore/protocol/openid-connect/certs
+      COMMERCECORE_AUDIENCIA: commercecore-api
+      COMMERCECORE_METRICAS_USUARIO: prometheus
+      COMMERCECORE_METRICAS_SENHA: Prometheus@123
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8082/actuator/health/readiness | grep -q 'UP'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:9.4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@commercecore.dev
+      PGADMIN_DEFAULT_PASSWORD: CommerceCore@123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "15053:80"
+    volumes:
+      - commercecore-pgadmin:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command: --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "19092:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - commercecore-prometheus:/prometheus
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "13002:3000"
+    volumes:
+      - commercecore-grafana:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  commercecore-postgres:
+  commercecore-pgadmin:
+  commercecore-prometheus:
+  commercecore-grafana:

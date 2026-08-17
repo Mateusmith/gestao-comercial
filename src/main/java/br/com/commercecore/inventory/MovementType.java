@@ -1,0 +1,14 @@
+package br.com.commercecore.inventory;
+
+public enum MovementType {
+    AJUSTE_ENTRADA,
+    AJUSTE_SAIDA,
+    RESERVA,
+    BAIXA_RESERVA,
+    LIBERACAO_RESERVA,
+    TRANSFERENCIA_ENTRADA,
+    TRANSFERENCIA_SAIDA,
+    RECEBIMENTO_COMPRA,
+    DEVOLUCAO_CLIENTE,
+    DEVOLUCAO_FORNECEDOR
+}

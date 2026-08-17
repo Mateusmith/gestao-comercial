@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "CommerceCore PostgreSQL",
+      "Group": "CommerceCore",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "commercecore",
+      "Username": "commercecore",
+      "SSLMode": "prefer"
+    }
+  }
+}

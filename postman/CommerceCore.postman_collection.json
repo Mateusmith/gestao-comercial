@@ -1,0 +1,658 @@
+{
+  "info": {
+    "_postman_id": "5f1c4b58-820a-463d-b146-2ec8fb709116",
+    "name": "CommerceCore - Fluxo empresarial completo",
+    "description": "Autentica, vende, recebe, compra, paga e valida estoque, relatórios e auditoria. Execute com o ambiente CommerceCore - Local.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{access_token}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const agora = new Date();",
+          "if (!pm.environment.get('sufixo_execucao')) {",
+          "  pm.environment.set('sufixo_execucao', agora.getTime().toString());",
+          "  pm.environment.set('valido_ate', new Date(agora.getTime() + 7 * 86400000).toISOString());",
+          "  pm.environment.set('primeiro_vencimento', new Date(agora.getTime() + 15 * 86400000).toISOString().slice(0, 10));",
+          "  pm.environment.set('inicio_relatorio', new Date(agora.getTime() - 86400000).toISOString().slice(0, 10));",
+          "  pm.environment.set('fim_relatorio', new Date(agora.getTime() + 86400000).toISOString().slice(0, 10));",
+          "  pm.environment.set('inicio_auditoria', new Date(agora.getTime() - 7200000).toISOString());",
+          "  pm.environment.set('fim_auditoria', new Date(agora.getTime() + 3600000).toISOString());",
+          "}",
+          "if (!pm.request.url.toString().includes('/protocol/openid-connect/token')) {",
+          "  pm.request.headers.upsert({ key: 'X-Empresa-ID', value: pm.environment.get('empresa_id') });",
+          "  pm.request.headers.upsert({ key: 'X-Filial-ID', value: pm.environment.get('filial_id') });",
+          "  pm.request.headers.upsert({ key: 'X-Correlation-ID', value: 'postman-' + pm.environment.get('sufixo_execucao') });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Autenticação e saúde",
+      "item": [
+        {
+          "name": "Obter JWT",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "password", "type": "text" },
+                { "key": "client_id", "value": "{{client_id}}", "type": "text" },
+                { "key": "username", "value": "{{usuario}}", "type": "text" },
+                { "key": "password", "value": "{{senha}}", "type": "text" }
+              ]
+            },
+            "url": "{{keycloak_url}}/realms/commercecore/protocol/openid-connect/token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Token emitido', function () { pm.response.to.have.status(200); });",
+                  "const agora = new Date();",
+                  "pm.environment.set('sufixo_execucao', agora.getTime().toString());",
+                  "pm.environment.set('valido_ate', new Date(agora.getTime() + 7 * 86400000).toISOString());",
+                  "pm.environment.set('primeiro_vencimento', new Date(agora.getTime() + 15 * 86400000).toISOString().slice(0, 10));",
+                  "pm.environment.set('inicio_relatorio', new Date(agora.getTime() - 86400000).toISOString().slice(0, 10));",
+                  "pm.environment.set('fim_relatorio', new Date(agora.getTime() + 86400000).toISOString().slice(0, 10));",
+                  "pm.environment.set('inicio_auditoria', new Date(agora.getTime() - 7200000).toISOString());",
+                  "pm.environment.set('fim_auditoria', new Date(agora.getTime() + 3600000).toISOString());",
+                  "const resposta = pm.response.json();",
+                  "pm.expect(resposta.access_token).to.be.a('string').and.not.empty;",
+                  "pm.environment.set('access_token', resposta.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar saúde",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/actuator/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API saudável', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().status).to.eql('UP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Precificação",
+      "item": [
+        {
+          "name": "Simular preço com promoção e cupom",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresaId\": \"{{empresa_id}}\",\n  \"filialId\": \"{{filial_id}}\",\n  \"skuId\": \"{{sku_id}}\",\n  \"quantidade\": 2,\n  \"codigoCupom\": \"BEMVINDO10\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/precificacao/simulacoes"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Preço final calculado', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(Number(pm.response.json().subtotal)).to.eql(9360);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Venda completa",
+      "item": [
+        {
+          "name": "Criar orçamento",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresaId\": \"{{empresa_id}}\",\n  \"filialId\": \"{{filial_id}}\",\n  \"clienteId\": \"{{cliente_id}}\",\n  \"validoAte\": \"{{valido_ate}}\",\n  \"codigoCupom\": \"BEMVINDO10\",\n  \"itens\": [\n    { \"skuId\": \"{{sku_id}}\", \"quantidade\": 2 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/vendas/orcamentos"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Orçamento criado', function () { pm.response.to.have.status(201); });",
+                "const resposta = pm.response.json();",
+                "pm.expect(resposta.status).to.eql('EM_EDICAO');",
+                "pm.environment.set('orcamento_id', resposta.id);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Enviar orçamento",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/vendas/orcamentos/{{orcamento_id}}/envio"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Orçamento enviado', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('ENVIADO'); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Aceitar orçamento",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/vendas/orcamentos/{{orcamento_id}}/aceite"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Orçamento aceito', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('ACEITO'); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Converter orçamento em pedido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"depositoId\": \"{{deposito_id}}\",\n  \"numeroParcelas\": 2,\n  \"primeiroVencimento\": \"{{primeiro_vencimento}}\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/vendas/orcamentos/{{orcamento_id}}/conversao"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Pedido de venda criado', function () { pm.response.to.have.status(201); });",
+              "const resposta = pm.response.json();",
+              "pm.expect(resposta.status).to.eql('RASCUNHO');",
+              "pm.environment.set('pedido_venda_id', resposta.id);"
+            ] }
+          }]
+        },
+        {
+          "name": "Confirmar pedido e reservar estoque",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/vendas/pedidos/{{pedido_venda_id}}/confirmacao"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Pedido confirmado', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('CONFIRMADO'); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Faturar pedido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/vendas/pedidos/{{pedido_venda_id}}/faturamento"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Pedido faturado', function () { pm.response.to.have.status(200); });",
+              "const resposta = pm.response.json();",
+              "pm.expect(Number(resposta.total)).to.eql(9360);",
+              "pm.environment.set('fatura_id', resposta.id);",
+              "pm.environment.unset('tentativas_recebiveis');"
+            ] }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "03 - Contas a receber",
+      "item": [
+        {
+          "name": "Listar recebíveis da fatura",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/financeiro/titulos?empresaId={{empresa_id}}&tipo=RECEBER&tamanho=100"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "type": "text/javascript", "exec": [
+                "if (Number(pm.environment.get('tentativas_recebiveis') || 0) > 0) { setTimeout(function () {}, 500); }"
+              ] }
+            },
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [
+                "pm.response.to.have.status(200);",
+                "const recebiveis = pm.response.json().conteudo.filter(t => t.origemId === pm.environment.get('fatura_id')).sort((a, b) => a.parcela - b.parcela);",
+                "let tentativa = Number(pm.environment.get('tentativas_recebiveis') || 0);",
+                "if (recebiveis.length < 2 && tentativa < 10) {",
+                "  pm.environment.set('tentativas_recebiveis', tentativa + 1);",
+                "  pm.execution.setNextRequest(pm.info.requestName);",
+                "} else {",
+                "  pm.test('Duas parcelas a receber publicadas', function () { pm.expect(recebiveis.length).to.eql(2); });",
+                "  pm.environment.set('titulo_receber_1_id', recebiveis[0].id);",
+                "  pm.environment.set('titulo_receber_2_id', recebiveis[1].id);",
+                "  pm.environment.set('valor_receber_1', recebiveis[0].saldo);",
+                "  pm.environment.set('valor_receber_2', recebiveis[1].saldo);",
+                "}"
+              ] }
+            }
+          ]
+        },
+        {
+          "name": "Receber primeira parcela",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-cr-1-{{sufixo_execucao}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaFinanceiraId\": \"{{conta_financeira_id}}\",\n  \"valor\": {{valor_receber_1}},\n  \"formaPagamento\": \"PIX\",\n  \"observacao\": \"Recebimento da primeira parcela pelo Postman\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/financeiro/titulos/{{titulo_receber_1_id}}/liquidacoes"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Primeira parcela recebida', function () { pm.response.to.have.status(200); pm.expect(Number(pm.response.json().saldoTituloAposOperacao)).to.eql(0); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Repetir primeira parcela sem duplicar",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-cr-1-{{sufixo_execucao}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaFinanceiraId\": \"{{conta_financeira_id}}\",\n  \"valor\": {{valor_receber_1}},\n  \"formaPagamento\": \"PIX\",\n  \"observacao\": \"Recebimento da primeira parcela pelo Postman\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/financeiro/titulos/{{titulo_receber_1_id}}/liquidacoes"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Repetição idempotente aceita', function () { pm.response.to.have.status(200); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Receber segunda parcela",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-cr-2-{{sufixo_execucao}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaFinanceiraId\": \"{{conta_financeira_id}}\",\n  \"valor\": {{valor_receber_2}},\n  \"formaPagamento\": \"PIX\",\n  \"observacao\": \"Recebimento da segunda parcela pelo Postman\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/financeiro/titulos/{{titulo_receber_2_id}}/liquidacoes"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Segunda parcela recebida', function () { pm.response.to.have.status(200); pm.expect(Number(pm.response.json().saldoTituloAposOperacao)).to.eql(0); });"
+            ] }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "04 - Compra e recebimentos parciais",
+      "item": [
+        {
+          "name": "Criar requisição",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresaId\": \"{{empresa_id}}\",\n  \"filialId\": \"{{filial_id}}\",\n  \"justificativa\": \"Reposição planejada do estoque\",\n  \"itens\": [\n    { \"skuId\": \"{{sku_id}}\", \"quantidade\": 10 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/compras/requisicoes"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Requisição criada', function () { pm.response.to.have.status(201); });",
+              "const resposta = pm.response.json();",
+              "pm.expect(resposta.status).to.eql('SOLICITADA');",
+              "pm.environment.set('requisicao_id', resposta.id);"
+            ] }
+          }]
+        },
+        {
+          "name": "Aprovar requisição",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/compras/requisicoes/{{requisicao_id}}/aprovacao"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Requisição aprovada', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('APROVADA'); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Registrar cotação",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fornecedorId\": \"{{fornecedor_id}}\",\n  \"validoAte\": \"{{valido_ate}}\",\n  \"itens\": [\n    { \"skuId\": \"{{sku_id}}\", \"quantidade\": 10, \"custoUnitario\": 4000 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/compras/requisicoes/{{requisicao_id}}/cotacoes"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Cotação registrada', function () { pm.response.to.have.status(201); });",
+              "const resposta = pm.response.json();",
+              "pm.expect(Number(resposta.total)).to.eql(40000);",
+              "pm.environment.set('cotacao_id', resposta.id);"
+            ] }
+          }]
+        },
+        {
+          "name": "Comparar cotações",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/compras/requisicoes/{{requisicao_id}}/comparativo"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Comparativo disponível', function () { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array').that.is.not.empty; });"
+            ] }
+          }]
+        },
+        {
+          "name": "Emitir pedido de compra",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"depositoId\": \"{{deposito_id}}\",\n  \"numeroParcelas\": 2,\n  \"primeiroVencimento\": \"{{primeiro_vencimento}}\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/compras/cotacoes/{{cotacao_id}}/pedido"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Pedido de compra emitido', function () { pm.response.to.have.status(201); });",
+              "const resposta = pm.response.json();",
+              "pm.expect(resposta.status).to.eql('EMITIDO');",
+              "pm.environment.set('pedido_compra_id', resposta.id);"
+            ] }
+          }]
+        },
+        {
+          "name": "Receber primeira parte",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-rec-1-{{sufixo_execucao}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentoFornecedor\": \"NF-{{sufixo_execucao}}-1\",\n  \"itens\": [\n    { \"skuId\": \"{{sku_id}}\", \"quantidade\": 4 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/compras/pedidos/{{pedido_compra_id}}/recebimentos"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Recebimento parcial criado', function () { pm.response.to.have.status(200); });",
+              "const resposta = pm.response.json();",
+              "pm.expect(Number(resposta.valorTotal)).to.eql(16000);",
+              "pm.environment.set('recebimento_1_id', resposta.id);"
+            ] }
+          }]
+        },
+        {
+          "name": "Repetir recebimento sem duplicar",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-rec-1-{{sufixo_execucao}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentoFornecedor\": \"NF-{{sufixo_execucao}}-1\",\n  \"itens\": [\n    { \"skuId\": \"{{sku_id}}\", \"quantidade\": 4 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/compras/pedidos/{{pedido_compra_id}}/recebimentos"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Recebimento idempotente', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().id).to.eql(pm.environment.get('recebimento_1_id')); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Receber saldo restante",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-rec-2-{{sufixo_execucao}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentoFornecedor\": \"NF-{{sufixo_execucao}}-2\",\n  \"itens\": [\n    { \"skuId\": \"{{sku_id}}\", \"quantidade\": 6 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/compras/pedidos/{{pedido_compra_id}}/recebimentos"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Recebimento final criado', function () { pm.response.to.have.status(200); });",
+              "const resposta = pm.response.json();",
+              "pm.expect(Number(resposta.valorTotal)).to.eql(24000);",
+              "pm.environment.set('recebimento_2_id', resposta.id);",
+              "pm.environment.unset('tentativas_pagaveis');"
+            ] }
+          }]
+        },
+        {
+          "name": "Confirmar fechamento do pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/compras/pedidos/{{pedido_compra_id}}"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Pedido totalmente recebido', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('RECEBIDO'); });"
+            ] }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "05 - Contas a pagar",
+      "item": [
+        {
+          "name": "Listar títulos dos recebimentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/financeiro/titulos?empresaId={{empresa_id}}&tipo=PAGAR&tamanho=100"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "type": "text/javascript", "exec": [
+                "if (Number(pm.environment.get('tentativas_pagaveis') || 0) > 0) { setTimeout(function () {}, 500); }"
+              ] }
+            },
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [
+                "pm.response.to.have.status(200);",
+                "const origens = [pm.environment.get('recebimento_1_id'), pm.environment.get('recebimento_2_id')];",
+                "const pagaveis = pm.response.json().conteudo.filter(t => origens.includes(t.origemId));",
+                "let tentativa = Number(pm.environment.get('tentativas_pagaveis') || 0);",
+                "if (pagaveis.length < 4 && tentativa < 10) {",
+                "  pm.environment.set('tentativas_pagaveis', tentativa + 1);",
+                "  pm.execution.setNextRequest(pm.info.requestName);",
+                "} else {",
+                "  pm.test('Quatro parcelas a pagar publicadas', function () { pm.expect(pagaveis.length).to.eql(4); });",
+                "  const titulo = pagaveis.find(t => t.origemId === pm.environment.get('recebimento_1_id'));",
+                "  pm.environment.set('titulo_pagar_id', titulo.id);",
+                "  pm.environment.set('valor_pagar', titulo.saldo);",
+                "}"
+              ] }
+            }
+          ]
+        },
+        {
+          "name": "Pagar primeira parcela",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-cp-1-{{sufixo_execucao}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaFinanceiraId\": \"{{conta_financeira_id}}\",\n  \"valor\": {{valor_pagar}},\n  \"formaPagamento\": \"TRANSFERENCIA\",\n  \"observacao\": \"Pagamento da primeira parcela pelo Postman\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/financeiro/titulos/{{titulo_pagar_id}}/liquidacoes"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Conta a pagar liquidada', function () { pm.response.to.have.status(200); pm.expect(Number(pm.response.json().saldoTituloAposOperacao)).to.eql(0); });"
+            ] }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "06 - Estoque, relatórios e auditoria",
+      "item": [
+        {
+          "name": "Consultar saldos do SKU",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/estoque/depositos/{{deposito_id}}/skus/{{sku_id}}/saldos"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Saldo disponível', function () { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array').that.is.not.empty; });"
+            ] }
+          }]
+        },
+        {
+          "name": "Consultar resumo gerencial",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/relatorios/resumo-gerencial?empresaId={{empresa_id}}&filialId={{filial_id}}&inicio={{inicio_relatorio}}&fim={{fim_relatorio}}"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Resumo consolidado', function () { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('object'); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Consultar reposição",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/relatorios/reposicao?empresaId={{empresa_id}}&filialId={{filial_id}}"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Relatório de reposição consultado', function () { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"
+            ] }
+          }]
+        },
+        {
+          "name": "Consultar auditoria",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/auditoria?empresaId={{empresa_id}}&inicio={{inicio_auditoria}}&fim={{fim_auditoria}}&tamanho=100"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Operações auditadas', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().totalElementos).to.be.above(5); });",
+              "pm.environment.unset('sufixo_execucao');"
+            ] }
+          }]
+        }
+      ]
+    }
+  ]
+}
