@@ -54,6 +54,10 @@ management:
       spring.security.authorizations: false
     key-values:
       aplicacao: commercecore
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 springdoc:
   swagger-ui:
